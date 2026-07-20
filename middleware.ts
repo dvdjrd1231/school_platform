@@ -12,7 +12,14 @@ const ROLE_PROTECTED: { prefix: string; roles: string[] }[] = [
 ]
 
 /** Routes reachable without a session. Everything else requires sign-in. */
-const PUBLIC_ROUTES = ["/signin", "/register", "/api/auth", "/api/register"]
+const PUBLIC_ROUTES = [
+  "/signin",
+  "/register",
+  "/api/auth",
+  "/api/register",
+  // Diagnostics must be reachable when auth itself is misconfigured.
+  "/api/health",
+]
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
