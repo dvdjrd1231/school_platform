@@ -19,6 +19,8 @@ const PUBLIC_ROUTES = [
   "/api/register",
   // Diagnostics must be reachable when auth itself is misconfigured.
   "/api/health",
+  // Bootstrap seeding runs before any account exists; it has its own secret.
+  "/api/seed",
 ]
 
 export default auth((req) => {
