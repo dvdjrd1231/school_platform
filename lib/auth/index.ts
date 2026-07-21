@@ -30,7 +30,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Ensure the env-configured bootstrap admin exists before we look the
         // user up, so ADMIN_USER / ADMIN_PASSWORD can sign in on a fresh
         // database with no seeding step. No-op unless those vars are set.
-        await ensureEnvAdmin()
+        //
+        // Wrapped so a bootstrap failure logs the real cause but does not throw
+        // out of authorize — an uncaught throw here surfaces to the browser as
+        // the opaque "error=Configuration" page and blocks every login,
+        // including already-seeded accounts.
+        try {
+          await ensureEnvAdmin()
+        } catch (err) {
+          console.error("[auth] ensureEnvAdmin failed:", err)
+        }
 
         // passwordHash is select:false on the schema, so request it explicitly.
         const user = await User.findOne({ email: email.toLowerCase() }).select("+passwordHash")

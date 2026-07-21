@@ -1,6 +1,8 @@
 import mongoose from "mongoose"
 
 import { connectDB, redactUri } from "@/lib/db/connect"
+import { ensureEnvAdmin } from "@/lib/auth/ensure-admin"
+import { User } from "@/lib/models"
 
 export const runtime = "nodejs"
 // Never cache a health check — a stale "ok" is worse than no check at all.
@@ -53,6 +55,23 @@ export async function GET() {
     database.error = redactUri(err instanceof Error ? err.message : String(err))
   }
 
+  // Run the same admin bootstrap that sign-in runs, and report the result.
+  // This surfaces the true cause of an "error=Configuration" sign-in failure
+  // without needing access to the server logs.
+  const adminBootstrap: { ok: boolean; error?: string; adminExists?: boolean } = { ok: false }
+  try {
+    await ensureEnvAdmin()
+    adminBootstrap.ok = true
+    if (database.connected && process.env.ADMIN_USER) {
+      adminBootstrap.adminExists = await User.exists({
+        email: process.env.ADMIN_USER.trim().toLowerCase(),
+      }).then(Boolean)
+    }
+  } catch (err) {
+    adminBootstrap.ok = false
+    adminBootstrap.error = redactUri(err instanceof Error ? err.message : String(err))
+  }
+
   const ready = database.connected && env.AUTH_SECRET
   const problems: string[] = []
   if (!env.MONGODB_URI && !env.MONGODB_URL && !env.DATABASE_URL) {
@@ -61,12 +80,21 @@ export async function GET() {
   if (!env.AUTH_SECRET) {
     problems.push("AUTH_SECRET is not set — sign-in cannot issue sessions.")
   }
-  if (database.connected && database.userCount === 0) {
-    problems.push("Database is reachable but has no users. Run `pnpm seed`.")
+  if (database.connected && database.userCount === 0 && !env.ADMIN_USER) {
+    problems.push("Database is reachable but has no users. Set ADMIN_USER/ADMIN_PASSWORD or seed.")
   }
   if (database.error) {
     problems.push(`Database connection failed: ${database.error}`)
   }
+  if (env.ADMIN_USER && !env.ADMIN_PASSWORD) {
+    problems.push("ADMIN_USER is set but ADMIN_PASSWORD is missing.")
+  }
+  if (adminBootstrap.error) {
+    problems.push(`Admin bootstrap failed: ${adminBootstrap.error}`)
+  }
+  if (env.ADMIN_USER && env.ADMIN_PASSWORD && adminBootstrap.ok && adminBootstrap.adminExists === false) {
+    problems.push("ADMIN_USER is not a valid email address, so the admin was not created.")
+  }
 
-  return Response.json({ ready, env, database, problems }, { status: ready ? 200 : 503 })
+  return Response.json({ ready, env, database, adminBootstrap, problems }, { status: ready ? 200 : 503 })
 }
