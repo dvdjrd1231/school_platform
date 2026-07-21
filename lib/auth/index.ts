@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import { z } from "zod"
 
 import { authConfig } from "./config"
+import { ensureEnvAdmin } from "./ensure-admin"
 import { connectDB } from "@/lib/db/connect"
 import { User } from "@/lib/models"
 
@@ -25,6 +26,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data
         await connectDB()
+
+        // Ensure the env-configured bootstrap admin exists before we look the
+        // user up, so ADMIN_USER / ADMIN_PASSWORD can sign in on a fresh
+        // database with no seeding step. No-op unless those vars are set.
+        await ensureEnvAdmin()
 
         // passwordHash is select:false on the schema, so request it explicitly.
         const user = await User.findOne({ email: email.toLowerCase() }).select("+passwordHash")

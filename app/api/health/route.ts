@@ -19,6 +19,8 @@ export async function GET() {
     MONGODB_URL: Boolean(process.env.MONGODB_URL),
     DATABASE_URL: Boolean(process.env.DATABASE_URL),
     AUTH_SECRET: Boolean(process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET),
+    ADMIN_USER: Boolean(process.env.ADMIN_USER),
+    ADMIN_PASSWORD: Boolean(process.env.ADMIN_PASSWORD),
     PUSHER_APP_ID: Boolean(process.env.PUSHER_APP_ID),
     PUSHER_KEY: Boolean(process.env.PUSHER_KEY),
     PUSHER_SECRET: Boolean(process.env.PUSHER_SECRET),
