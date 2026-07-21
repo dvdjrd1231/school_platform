@@ -10,6 +10,12 @@ import type { UserRole } from "@/lib/models/User"
  * `middleware.ts` work at all.
  */
 export const authConfig = {
+  // Vercel serves each git branch and preview from its own *.vercel.app host.
+  // NextAuth v5 rejects requests from hosts it doesn't recognise (an
+  // UntrustedHost error, which surfaces as the generic "Configuration" error
+  // page). Trusting the host lets auth work on preview URLs as well as the
+  // production domain, without hard-coding a single URL.
+  trustHost: true,
   pages: {
     signIn: "/signin",
   },
