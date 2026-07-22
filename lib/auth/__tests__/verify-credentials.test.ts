@@ -52,6 +52,25 @@ describe("verifyCredentials", () => {
     expect(result).not.toHaveProperty("passwordHash")
   })
 
+  it("returns a structured-cloneable result so the session JWT can encode", async () => {
+    // Regression: Mongoose returns roles as a CoreDocumentArray (an Array
+    // subclass). jose calls structuredClone when encoding the JWT, which throws
+    // "DataCloneError: [object Array] could not be cloned" on that type and
+    // breaks every login with an opaque error=Configuration page.
+    await createUser("jane@maatk12.edu", "correct-horse-battery")
+
+    const result = await verifyCredentials({
+      email: "jane@maatk12.edu",
+      password: "correct-horse-battery",
+    })
+
+    expect(result).not.toBeNull()
+    expect(() => structuredClone(result)).not.toThrow()
+    // A plain array, not a subclass masquerading as one.
+    expect(Object.getPrototypeOf(result!.roles)).toBe(Array.prototype)
+    expect(result!.roles.every((r) => typeof r === "string")).toBe(true)
+  })
+
   it("rejects a wrong password", async () => {
     await createUser("jane@maatk12.edu", "correct-horse-battery")
     expect(await verifyCredentials({ email: "jane@maatk12.edu", password: "wrong" })).toBeNull()

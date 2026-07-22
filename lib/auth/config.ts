@@ -23,8 +23,14 @@ export const authConfig = {
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.id = user.id as string
-        token.roles = (user as { roles?: UserRole[] }).roles ?? ["student"]
+        token.id = String(user.id)
+        // Everything placed on the token must survive structuredClone during
+        // JWT encoding, so normalise to plain strings rather than trusting the
+        // shape handed in (a Mongoose array here breaks encoding entirely).
+        const roles = (user as { roles?: UserRole[] }).roles
+        token.roles = Array.isArray(roles) && roles.length > 0
+          ? roles.map((role) => String(role) as UserRole)
+          : (["student"] as UserRole[])
       }
       return token
     },

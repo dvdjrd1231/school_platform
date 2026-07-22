@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation"
 
 import { useApi } from "@/hooks/use-api"
 import { AsyncState } from "@/components/ui/async-state"
+import { useRole } from "@/components/context/role-context"
+import { CreateCourseDialog } from "@/components/courses/create-course-dialog"
 
 interface CourseListItem {
   _id: string
@@ -23,16 +25,27 @@ interface CourseListItem {
 
 export default function CoursesPage() {
   const router = useRouter()
+  const { isTeacher, isAdmin } = useRole()
   const { data, error, isLoading, refetch } = useApi<{ courses: CourseListItem[] }>("/api/courses")
   const courses = data?.courses ?? []
 
   const openCourse = (id: string) => router.push(`/courses/${id}`)
+  const canManage = isTeacher || isAdmin
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-emerald-600">My Courses</h1>
-        <p className="text-muted-foreground">Manage and access all your enrolled courses</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-emerald-600">
+            {canManage ? "My Courses" : "My Courses"}
+          </h1>
+          <p className="text-muted-foreground">
+            {canManage
+              ? "Courses you teach. Create a course to add modules and lessons."
+              : "Manage and access all your enrolled courses"}
+          </p>
+        </div>
+        {canManage && <CreateCourseDialog onCreated={refetch} />}
       </div>
 
       <AsyncState

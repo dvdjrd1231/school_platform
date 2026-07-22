@@ -284,7 +284,14 @@ export function AssignmentList() {
                     )}
 
                     <div className="flex items-center gap-2">
-                      {status === "submitted" || status === "graded" ? (
+                      {isTeacher || isAdmin ? (
+                        <Link href={`/classrooms/assignments/${assignment._id}/grade`}>
+                          <Button size="sm">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Grade submissions
+                          </Button>
+                        </Link>
+                      ) : status === "submitted" || status === "graded" ? (
                         <Link href={`/classrooms/assignments/${assignment._id}`}>
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-2" />

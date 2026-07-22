@@ -47,6 +47,12 @@ export async function verifyCredentials(raw: unknown): Promise<AuthedUser | null
     name: user.name,
     email: user.email,
     image: user.avatar ?? null,
-    roles: user.roles,
+    // Must be plain, structured-cloneable values. Mongoose hands back a
+    // CoreDocumentArray (an Array subclass) here, and `jose` calls
+    // structuredClone when encoding the session JWT — which throws
+    // "DataCloneError: [object Array] could not be cloned" and surfaces to the
+    // browser as an opaque error=Configuration page. Copy to a plain array of
+    // plain strings so the token can be serialised.
+    roles: user.roles.map((role) => String(role) as UserRole),
   }
 }
