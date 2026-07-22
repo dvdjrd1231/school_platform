@@ -156,6 +156,12 @@ nano .env
 # Your domain, without protocol. Caddy requests the certificate for this name.
 DOMAIN=school.example.com
 
+# No domain yet? Test over plain HTTP against the server's IP instead:
+#   DOMAIN=:80
+#   APP_URL=http://YOUR_SERVER_IP
+# Let's Encrypt cannot issue certificates for bare IP addresses, so HTTPS
+# requires a real domain. Switch both lines back once DNS is pointed.
+
 # MongoDB credentials — invent these now; they are created on first start.
 MONGO_ROOT_USER=schooladmin
 MONGO_ROOT_PASSWORD=<a long random password>
@@ -309,6 +315,13 @@ Check `docker compose logs caddy`. Usually one of:
 - the DNS `A` record doesn't point at this server yet (`dig +short YOUR_DOMAIN`)
 - ports 80/443 are blocked — `sudo ufw status`, plus any provider-level firewall
 - `DOMAIN` in `.env` doesn't exactly match the DNS name
+
+**Logs repeat `TypeError: Invalid URL` with `input: 'https://'`**
+`DOMAIN` is missing or empty in `.env`, so `NEXTAUTH_URL` became the bare
+string `https://`. Set `DOMAIN` (a hostname, or `:80` plus
+`APP_URL=http://YOUR_SERVER_IP` when testing without a domain) and run
+`docker compose up -d`. Compose now refuses to start when a required value is
+missing, so this should surface as a clear message rather than a runtime crash.
 
 **`/api/health` shows `"connected": false`**
 Look at `docker compose logs mongo`. Usually `MONGO_ROOT_USER` /
