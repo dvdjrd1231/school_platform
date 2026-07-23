@@ -13,6 +13,7 @@ import {
 
 import { useApi } from "@/hooks/use-api"
 import { AsyncState } from "@/components/ui/async-state"
+import { StatTile } from "@/components/admin/stat-tile"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -59,12 +60,12 @@ export default function AdminDashboard() {
   const s = statsReq.data
 
   const tiles = [
-    { label: "Students", value: s?.totalStudents, icon: Users, color: "text-blue-600" },
-    { label: "Teachers", value: s?.totalTeachers, icon: GraduationCap, color: "text-green-600" },
-    { label: "Active Courses", value: s?.activeCourses, icon: BookOpen, color: "text-purple-600" },
-    { label: "Enrollments", value: s?.activeEnrollments, icon: Users, color: "text-emerald-600" },
-    { label: "Assignments", value: s?.publishedAssignments, icon: FileText, color: "text-orange-600" },
-    { label: "Awaiting grading", value: s?.pendingGrades, icon: ClipboardCheck, color: "text-red-600" },
+    { label: "Students", value: s?.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Teachers", value: s?.totalTeachers, icon: GraduationCap, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Active Courses", value: s?.activeCourses, icon: BookOpen, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Enrollments", value: s?.activeEnrollments, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Assignments", value: s?.publishedAssignments, icon: FileText, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: "Awaiting grading", value: s?.pendingGrades, icon: ClipboardCheck, color: "text-red-600", bg: "bg-red-50" },
   ]
 
   const quickActions = [
@@ -88,22 +89,9 @@ export default function AdminDashboard() {
 
       <AsyncState isLoading={statsReq.isLoading} error={statsReq.error} onRetry={statsReq.refetch}>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {tiles.map((t) => {
-            const Icon = t.icon
-            return (
-              <Card key={t.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">{t.label}</p>
-                      <p className={`text-2xl font-bold ${t.color}`}>{t.value ?? "—"}</p>
-                    </div>
-                    <Icon className={`h-5 w-5 ${t.color}`} />
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
+          {tiles.map((t) => (
+            <StatTile key={t.label} {...t} />
+          ))}
         </div>
       </AsyncState>
 
